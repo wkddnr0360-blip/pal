@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>팰월드 드롭 보상 테이블</title>
+  <style>
+    /* 팰월드 게임 UI 테마 색상 및 최적화된 변수 */
+    :root {
+      --bg: #121418; /* 게임 배경 다크톤 */
+      --panel: rgba(26, 30, 36, 0.85); /* 반투명 UI 패널 */
+      --border: rgba(255, 255, 255, 0.1);
+      --accent: #00E5FF; /* 팰월드 특유의 텍크 블루 */
+      --text: #F0F0F5;
+      --sub: #A0A5B0;
+      
+      --c-early: #4ADE80;
+      --c-mid: #FBBF24;
+      --c-late: #F87171;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: radial-gradient(circle at top, #1F242C 0%, var(--bg) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 15px;
+    }
+
+    .wrap { max-width: 900px; margin: 0 auto; }
+
+    /* 타이틀 영역 */
+    header { text-align: center; margin: 20px 0; }
+    header h1 { font-size: 24px; font-weight: 800; text-shadow: 0 0 10px rgba(0,229,255,0.3); }
+    header p { color: var(--sub); font-size: 13px; margin-top: 5px; }
+
+    /* 필터바 (게임 탭 UI 느낌) */
+    .tabs {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; gap: 8px; justify-content: center;
+      background: var(--bg); padding: 10px 0 20px;
+    }
+    .tab {
+      background: var(--panel); border: 1px solid var(--border);
+      color: var(--sub); padding: 8px 16px; border-radius: 6px;
+      font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;
+    }
+    .tab:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+    .tab.active[data-t="all"] { background: var(--accent); color: #000; border-color: var(--accent); text-shadow: none;}
+    .tab.active[data-t="초반"] { background: var(--c-early); color: #000; border-color: var(--c-early); }
+    .tab.active[data-t="중반"] { background: var(--c-mid); color: #000; border-color: var(--c-mid); }
+    .tab.active[data-t="후반"] { background: var(--c-late); color: #000; border-color: var(--c-late); }
+
+    /* 카드 그리드 */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+    /* 개별 카드 (몬스터 정보 패널 느낌) */
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+    .c-head {
+      display: flex; justify-content: space-between; padding: 12px 16px;
+      background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border);
+      font-weight: bold; align-items: center;
+    }
+    .c-early .lv { color: var(--c-early); }
+    .c-mid .lv { color: var(--c-mid); }
+    .c-late .lv { color: var(--c-late); }
+
+    /* 인벤토리 아이템 리스트 느낌 */
+    .row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .row:hover { background: rgba(255,255,255,0.05); }
+    .row.sphere { background: linear-gradient(90deg, rgba(0,229,255,0.08), transparent); }
+    .row.sphere .name { color: var(--accent); font-weight: bold; }
+
+    /* 인벤토리 슬롯 아이콘 */
+    .slot {
+      width: 36px; height: 36px; background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-right: 12px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    }
+    
+    .info { flex: 1; display: flex; align-items: center; }
+    .name { font-size: 14px; font-weight: 500; }
+    
+    /* 게임식 확률 표기 */
+    .rate { 
+      font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; 
+      background: rgba(255,255,255,0.1); color: var(--sub); width: 45px; text-align: center;
+    }
+    .rate.g { background: var(--c-early); color: #000; }
+    .rate.h { background: var(--c-mid); color: #000; }
+
+    /* 수량 */
+    .qty { width: 90px; text-align: right; font-size: 13px; font-weight: bold; font-family: monospace; }
+    .qty.none { color: rgba(255,255,255,0.2); }
+
+    /* 푸터 */
+    footer {
+      text-align: center; padding: 20px; margin-top: 20px;
+      color: var(--sub); font-size: 12px; line-height: 1.6;
+    }
+    footer b { color: var(--accent); font-weight: normal; }
+
+    @media (max-width: 400px) { .qty { width: 75px; } .slot { width: 32px; height: 32px; font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>PALWORLD DROPS</h1>
+      <p>데이터베이스 드롭 보상 테이블</p>
+    </header>
+
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-t="all">전체보기</div>
+      <div class="tab" data-t="초반">초반 (1~20)</div>
+      <div class="tab" data-t="중반">중반 (26~35)</div>
+      <div class="tab" data-t="후반">후반 (41~56)</div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <footer>
+      💡 <b>골드·도그코인</b> 2.5배 적용됨<br>
+      나머지 아이템 <b>3배</b> 배율 적용
+    </footer>
+  </div>
+
+  <script>
+    // JS 데이터 최적화 (변수명 단축)
+    const D = [
+      { l:1, t:"초반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"325~975"}, {i:"🔵",n:"팰스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"10%",q:"─",nq:1}] },
+      { l:6, t:"초반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"520~1300"}, {i:"🐕",n:"도그코인",r:"33%",q:"2~7"}, {i:"🔵",n:"팰스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"10%",q:"─",nq:1}] },
+      { l:11, t:"초반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"975~2275"}, {i:"🐕",n:"도그코인",r:"33%",q:"2~7"}, {i:"🟣",n:"메가 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"10%",q:"─",nq:1}] },
+      { l:16, t:"초반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"1950~3250"}, {i:"🐕",n:"도그코인",r:"33%",q:"2~7"}, {i:"🟣",n:"메가 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"10%",q:"─",nq:1}] },
+      { l:20, t:"초반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"2925~4550"}, {i:"🐕",n:"도그코인",r:"33%",q:"2~7"}, {i:"🔴",n:"기가 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"10%",q:"─",nq:1}] },
+      { l:26, t:"중반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"7200~10800"}, {i:"🐕",n:"도그코인",r:"33%",q:"17~37"}, {i:"🟡",n:"테라 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"60%",c:"h",q:"0~3"}] },
+      { l:31, t:"중반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"9600~14400"}, {i:"🐕",n:"도그코인",r:"33%",q:"17~37"}, {i:"🟡",n:"테라 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"60%",c:"h",q:"0~3"}] },
+      { l:35, t:"중반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"16500~24000"}, {i:"🐕",n:"도그코인",r:"33%",q:"17~37"}, {i:"🟠",n:"울트라 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"80%",c:"h",q:"0~3"}] },
+      { l:41, t:"후반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"22500~31500"}, {i:"🐕",n:"도그코인",r:"33%",q:"50~82"}, {i:"🟠",n:"울트라 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"80%",c:"h",q:"0~3"}] },
+      { l:44, t:"후반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"30000~42000"}, {i:"🐕",n:"도그코인",r:"33%",q:"50~82"}, {i:"⚪",n:"레전드 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"80%",c:"h",q:"0~3"}] },
+      { l:51, t:"후반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"39000~52500"}, {i:"🐕",n:"도그코인",r:"33%",q:"50~82"}, {i:"🌟",n:"얼티밋 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"80%",c:"h",q:"0~3"}] },
+      { l:56, t:"후반", d:[{i:"💰",n:"골드",r:"확정",c:"g",q:"51000~67500"}, {i:"🐕",n:"도그코인",r:"33%",q:"50~82"}, {i:"💎",n:"엑조틱 스피어",r:"33%",q:"3",s:1}, {i:"🍰",n:"케이크",r:"30%",q:"0~3"}, {i:"💎",n:"에메랄드",r:"80%",c:"h",q:"0~3"}] }
+    ];
+
+    const grid = document.getElementById('grid');
+    const tabs = document.querySelectorAll('.tab');
+
+    function render(filter) {
+      grid.innerHTML = (filter === 'all' ? D : D.filter(x => x.t === filter)).map(x => `
+        <div class="card c-${x.t === '초반' ? 'early' : x.t === '중반' ? 'mid' : 'late'}">
+          <div class="c-head">
+            <span class="lv">Lv.${x.l}</span>
+            <span style="font-size:12px; color:var(--sub)">${x.t}</span>
+          </div>
+          <div>
+            ${x.d.map(i => `
+              <div class="row ${i.s ? 'sphere' : ''}">
+                <div class="info">
+                  <div class="slot">${i.i}</div>
+                  <div class="name">${i.n}</div>
+                </div>
+                <div class="rate ${i.c || ''}">${i.r}</div>
+                <div class="qty ${i.nq ? 'none' : ''}">${i.q}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    tabs.forEach(t => t.onclick = (e) => {
+      tabs.forEach(x => x.classList.remove('active'));
+      e.target.classList.add('active');
+      render(e.target.dataset.t);
+    });
+
+    render('all'); // 초기 렌더링
+  </script>
+</body>
+</html>
